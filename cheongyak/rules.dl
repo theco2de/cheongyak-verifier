@@ -1,0 +1,76 @@
+// eligibility-v1: 승인된 공고 조건과 신청자 사실로 공급유형별 자격을 판정한다.
+// 결과는 세 갈래다: 적격(eligible) / 부적격(ineligible) / 판정 불가(undetermined).
+// 신청자 정보가 없는 조건은 실패가 아니라 미확인(unknown)으로 남긴다.
+
+// --- 입력 ---------------------------------------------------------------
+.decl supply(s: symbol)
+.decl all_marker(s: symbol)
+.decl cond(c: symbol, s: symbol, g: symbol, a: symbol, op: symbol, v: int64)
+.decl cond_region(c: symbol, s: symbol, g: symbol, a: symbol, r: symbol)
+.decl applicant(a: symbol, v: int64)
+.decl applicant_region(a: symbol, r: symbol)
+.decl region_parent(child: symbol, parent: symbol)
+
+// --- 지역 계층: 하위 지역은 모든 상위 지역에 포함된다 ---------------------
+.decl within(child: symbol, ancestor: symbol)
+within(X, Y) :- region_parent(X, Y).
+within(X, Z) :- region_parent(X, Y), within(Y, Z).
+
+// --- 조건 단위 판정 -------------------------------------------------------
+.decl known(c: symbol)
+.decl pass(c: symbol)
+.decl fail(c: symbol)
+.decl unknown(c: symbol)
+
+known(C) :- cond(C, _, _, A, _, _), applicant(A, _).
+known(C) :- cond_region(C, _, _, A, _), applicant_region(A, _).
+
+pass(C) :- cond(C, _, _, A, "ge", V), applicant(A, X), X >= V.
+pass(C) :- cond(C, _, _, A, "gt", V), applicant(A, X), X > V.
+pass(C) :- cond(C, _, _, A, "le", V), applicant(A, X), X <= V.
+pass(C) :- cond(C, _, _, A, "lt", V), applicant(A, X), X < V.
+pass(C) :- cond(C, _, _, A, "eq", V), applicant(A, X), X = V.
+pass(C) :- cond(C, _, _, A, "ne", V), applicant(A, X), X != V.
+pass(C) :- cond_region(C, _, _, A, R), applicant_region(A, R).
+pass(C) :- cond_region(C, _, _, A, R), applicant_region(A, X), within(X, R).
+
+fail(C) :- known(C), !pass(C).
+unknown(C) :- cond(C, _, _, _, _, _), !known(C).
+unknown(C) :- cond_region(C, _, _, _, _), !known(C).
+
+// --- 공급유형별 조건 묶음: 공통 조건(all)은 모든 공급유형에 들어간다 ---------
+.decl member(s: symbol, g: symbol, c: symbol)
+member(S, G, C) :- cond(C, S, G, _, _, _), supply(S).
+member(S, G, C) :- cond_region(C, S, G, _, _), supply(S).
+member(S, G, C) :- cond(C, M, G, _, _, _), all_marker(M), supply(S).
+member(S, G, C) :- cond_region(C, M, G, _, _), all_marker(M), supply(S).
+
+// --- 그룹 판정: 같은 그룹의 조건은 OR(하나라도 충족하면 충족) ---------------
+.decl group(s: symbol, g: symbol)
+.decl group_pass(s: symbol, g: symbol)
+.decl group_open(s: symbol, g: symbol)
+.decl group_fail(s: symbol, g: symbol)
+.decl group_unknown(s: symbol, g: symbol)
+
+group(S, G) :- member(S, G, _).
+group_pass(S, G) :- member(S, G, C), pass(C).
+group_open(S, G) :- member(S, G, C), unknown(C).
+group_fail(S, G) :- group(S, G), !group_pass(S, G), !group_open(S, G).
+group_unknown(S, G) :- group(S, G), !group_pass(S, G), group_open(S, G).
+
+// --- 공급유형 판정: 모든 그룹이 충족되어야 적격 ------------------------------
+.decl has_cond(s: symbol)
+.decl supply_fail(s: symbol)
+.decl supply_open(s: symbol)
+.decl eligible(s: symbol)
+.decl ineligible(s: symbol)
+.decl undetermined(s: symbol)
+.decl no_condition(s: symbol)
+
+has_cond(S) :- group(S, _).
+supply_fail(S) :- group_fail(S, _).
+supply_open(S) :- group_unknown(S, _).
+ineligible(S) :- supply_fail(S).
+undetermined(S) :- supply_open(S), !supply_fail(S).
+eligible(S) :- has_cond(S), !supply_fail(S), !supply_open(S).
+no_condition(S) :- supply(S), !has_cond(S).

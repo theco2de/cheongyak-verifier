@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>청약 자격 판정기</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+  <h1>청약 자격 판정기</h1>
+  <p>공고문 → LLM 조건 추출 → 사람 검토 → Wirelog 판정. 모든 판정에 공고 원문 근거를 붙입니다.</p>
+</header>
+<div class="layout">
+  <aside>
+    <section class="card">
+      <h2>공고 등록</h2>
+      <input id="up-title" placeholder="공고 이름(선택)">
+      <input id="up-file" type="file" accept=".txt,.md,.pdf,.csv,.json,.log">
+      <textarea id="up-text" rows="4" placeholder="또는 공고문 텍스트 붙여넣기"></textarea>
+      <button id="up-btn">등록</button>
+      <p id="up-msg" class="msg"></p>
+    </section>
+    <section class="card">
+      <h2>공고 목록</h2>
+      <ul id="notices"></ul>
+    </section>
+  </aside>
+  <main id="main"><p class="empty">왼쪽에서 공고를 등록하거나 선택하세요.</p></main>
+</div>
+<script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cheongyak-verifier"
+version = "0.1.0"
+description = "청약 자격 판정기: LLM 조건 추출 + 사람 검토 + Wirelog(PyreWire) 결정적 판정"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.11"
+dependencies = ["pyrewire>=1.1.2,<2", "pypdf>=5,<7"]
+
+[project.scripts]
+cheongyak = "cheongyak.cli:main"
+
+[tool.setuptools.package-data]
+cheongyak = ["rules.dl", "regions.json", "web/*"]
+
+[tool.setuptools.packages.find]
+include = ["cheongyak*"]

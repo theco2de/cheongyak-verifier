@@ -1,0 +1,17 @@
+{
+ "age": 31,
+ "residence": "경기도 하남시",
+ "residence_months": 30,
+ "homeless_household": 1,
+ "win_history_5y": 0,
+ "has_owned_home": 0,
+ "is_householder": 1,
+ "marriage_months": 36,
+ "minor_children": 1,
+ "account_months": 40,
+ "deposit_count": 38,
+ "deposit_amount": 760,
+ "income_pct": 150,
+ "assets": 21000,
+ "income_tax_years": 6
+}
